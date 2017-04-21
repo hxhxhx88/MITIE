@@ -223,12 +223,12 @@ namespace mitie
 
             fingerprint = dlib::murmur_hash3_128bit(&buf[0], buf.size()).first;
         }
-        int pure_model_version;
         dlib::uint64 fingerprint;
         dlib::uint64 tfe_fingerprint;
         std::vector<std::string> tag_name_strings;
         total_word_feature_extractor fe;
         dlib::multiclass_linear_decision_function<dlib::sparse_linear_kernel<ner_sample_type>,unsigned long> df;
+        int pure_model_version;        
     };
 }
 

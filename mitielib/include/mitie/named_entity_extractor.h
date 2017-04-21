@@ -45,7 +45,7 @@ namespace mitie
 
         /*!
             requires
-                - segmenter.get_feature_extractor().num_features() == fe.get_num_dimensions() 
+                - segmenter.get_feature_extractor().num_features() == fe.get_num_dimensions()
                 - df must be designed to work with fe (i.e. it must have been trained with
                   features from fe and extract_ner_chunk_features()).
                 - df.number_of_classes() => tag_name_strings.size()
@@ -58,9 +58,9 @@ namespace mitie
                       integers and that the tag_name_strings vector and the decision function
                       need to agree on the set of labels)
             ensures
-                - Just loads the given objects into *this.  
+                - Just loads the given objects into *this.
                 - The interpretation of tag_name_strings is that it maps the output of df
-                  into a meaningful text name for the NER tag.  
+                  into a meaningful text name for the NER tag.
         !*/
 
         named_entity_extractor(const std::string& pureModelName,
@@ -80,7 +80,7 @@ namespace mitie
         );
         /*!
             requires
-                - Use this constructor to load just the pure model. You can 
+                - Use this constructor to load just the pure model. You can
                   provide a total_word_feature_extractor explicitly while prediction.
         !*/
 
@@ -109,12 +109,12 @@ namespace mitie
                   inside sentence.  The detected named entities are stored into chunks.
                 - If this instance has just the pure model and feature_extractor has not been initialized,
                   use the overloaded predict() method to provide the feature_extractor
-                - #chunks == the locations of the named entities. 
+                - #chunks == the locations of the named entities.
                 - The identified named entities are listed inside chunks in the order in
-                  which they appeared in the input sentence.  
+                  which they appeared in the input sentence.
                 - #chunks.size() == #chunk_tags.size()
                 - for all valid i:
-                    - #chunk_tags[i] == the label for the entity at location #chunks[i].  Moreover, 
+                    - #chunk_tags[i] == the label for the entity at location #chunks[i].  Moreover,
                       chunk tag ID numbers are contiguous and start at 0.  Therefore we have:
                         - 0 <= #chunk_tags[i] < get_tag_name_strings().size()
                     - #chuck_score[i] == the score for the entity at location #chunks[i]. The value
@@ -172,12 +172,12 @@ namespace mitie
                   inside sentence.  The detected named entities are stored into chunks.
                 - If this instance has just the pure model and feature_extractor has not been initialized,
                   use the overloaded method to provide the feature_extractor
-                - #chunks == the locations of the named entities. 
+                - #chunks == the locations of the named entities.
                 - The identified named entities are listed inside chunks in the order in
-                  which they appeared in the input sentence.  
+                  which they appeared in the input sentence.
                 - #chunks.size() == #chunk_tags.size()
                 - for all valid i:
-                    - #chunk_tags[i] == the label for the entity at location #chunks[i].  Moreover, 
+                    - #chunk_tags[i] == the label for the entity at location #chunks[i].  Moreover,
                       chunk tag ID numbers are contiguous and start at 0.  Therefore we have:
                         - 0 <= #chunk_tags[i] < get_tag_name_strings().size()
                     - #chunks[i] == a half open range indicating where the entity is within
@@ -217,7 +217,7 @@ namespace mitie
         ) const { return tag_name_strings; }
         /*!
             ensures
-                - Returns a vector that maps entity numeric ID tags into their string labels.  
+                - Returns a vector that maps entity numeric ID tags into their string labels.
         !*/
 
         friend void serialize(const named_entity_extractor& item, std::ostream& out)
@@ -276,15 +276,14 @@ namespace mitie
             fingerprint = dlib::murmur_hash3_128bit(&buf[0], buf.size()).first;
         }
 
-        int pure_model_version;
         dlib::uint64 fingerprint;
         dlib::uint64 tfe_fingerprint;
         std::vector<std::string> tag_name_strings;
         total_word_feature_extractor fe;
         dlib::sequence_segmenter<ner_feature_extractor> segmenter;
         dlib::multiclass_linear_decision_function<dlib::sparse_linear_kernel<ner_sample_type>,unsigned long> df;
+        int pure_model_version;
     };
 }
 
 #endif // MIT_LL_MITIE_NaMED_ENTITY_EXTRACTOR_H_
-
