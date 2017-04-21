@@ -23,7 +23,7 @@ namespace mitie
     text_categorizer_trainer::
     text_categorizer_trainer (
         const std::string& filename
-    ) : beta(0.5), num_threads(4)
+    ) : beta(0.5), num_threads(4), max_iterations(2000)
     {
         string classname;
         dlib::deserialize(filename) >> classname >> tfe;
@@ -32,7 +32,7 @@ namespace mitie
 // ----------------------------------------------------------------------------------------
 
     unsigned long text_categorizer_trainer::
-    size() const 
+    size() const
     {
         return contents.size();
     }
@@ -43,7 +43,7 @@ namespace mitie
     add (
             const std::vector<std::string>& text,
             const std::string& label
-    ) 
+    )
     {
         contents.push_back(text);
         text_labels.push_back(get_label_id(label));
@@ -55,7 +55,7 @@ namespace mitie
     add (
             const std::vector<std::vector<std::string> >& texts,
             const std::vector<std::string>& labels
-    ) 
+    )
     /*!
         requires
             - it must be legal to call add(texts[i], labels[i]) for all i.
@@ -74,8 +74,21 @@ namespace mitie
 // ----------------------------------------------------------------------------------------
 
     unsigned long text_categorizer_trainer::
+    get_max_iterations (
+    ) const { return max_iterations; }
+
+// ----------------------------------------------------------------------------------------
+
+    unsigned long text_categorizer_trainer::
     get_num_threads (
     ) const { return num_threads; }
+
+// ----------------------------------------------------------------------------------------
+
+    void text_categorizer_trainer::
+    set_max_iterations (
+        unsigned long num
+    ) { max_iterations = num; }
 
 // ----------------------------------------------------------------------------------------
 
@@ -155,7 +168,7 @@ namespace mitie
         {}
 
         double operator() (
-            const double C 
+            const double C
         ) const
         {
             svm_multiclass_linear_trainer<sparse_linear_kernel<text_sample_type>,unsigned long> trainer;
@@ -172,7 +185,7 @@ namespace mitie
 
         double compute_fscore (
             const matrix<double>& res,
-            const unsigned long num_labels 
+            const unsigned long num_labels
         ) const
         {
             // Any output from the classifier that has a label value >= num_labels is
@@ -244,9 +257,13 @@ namespace mitie
         trainer.set_c(300);
         trainer.set_num_threads(num_threads);
         trainer.set_epsilon(0.0001);
-        trainer.set_max_iterations(2000);
-        //trainer.be_verbose();
+        trainer.set_max_iterations(max_iterations);
 
+        #ifdef VERBOSE
+        trainer.be_verbose();
+        #endif
+
+        #ifdef SEARCH_C
         if (count_of_least_common_label(labels) > 1)
         {
             train_text_classifier_objective obj(samples, labels, num_threads, beta, get_all_labels().size(), 2000);
@@ -268,6 +285,7 @@ namespace mitie
             cout << "best C: "<< C << endl;
             trainer.set_c(C);
         }
+        #endif
 
         classifier_type df = trainer.train(samples, labels);
         matrix<double> res = test_multiclass_decision_function(df, samples, labels);
@@ -316,6 +334,3 @@ namespace mitie
 // ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 }
-
-
-

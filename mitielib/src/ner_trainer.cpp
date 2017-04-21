@@ -20,7 +20,7 @@ namespace mitie
         static bool entities_overlap (
             const std::pair<unsigned long, unsigned long>& arg1,
             const std::pair<unsigned long, unsigned long>& arg2
-        ) 
+        )
         {
             // find intersection range
             const unsigned long left = std::max(arg1.first, arg2.first);
@@ -48,18 +48,18 @@ namespace mitie
 
     unsigned long ner_training_instance::
     num_tokens(
-    ) const 
-    { 
-        return tokens.size(); 
+    ) const
+    {
+        return tokens.size();
     }
 
 // ----------------------------------------------------------------------------------------
 
     unsigned long ner_training_instance::
     num_entities(
-    ) const 
-    { 
-        return chunks.size(); 
+    ) const
+    {
+        return chunks.size();
     }
 
 // ----------------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ namespace mitie
         const std::string& label
     )
     {
-        // TODO, make just DLIB_ASSERT 
+        // TODO, make just DLIB_ASSERT
         DLIB_CASSERT(overlaps_any_entity(range.first, range.second-range.first) == false, "Invalid Inputs");
         DLIB_CASSERT(range.first < range.second && range.second <= num_tokens(), "Invalid Inputs");
 
@@ -104,7 +104,7 @@ namespace mitie
         const char* label
     )
     {
-        // TODO, make just DLIB_ASSERT 
+        // TODO, make just DLIB_ASSERT
         DLIB_CASSERT(overlaps_any_entity(start, length) == false, "Invalid Inputs");
         DLIB_CASSERT(length > 0 && start+length <= num_tokens(), "Invalid Inputs");
         chunks.push_back(std::make_pair(start, start+length));
@@ -119,7 +119,7 @@ namespace mitie
     ner_trainer::
     ner_trainer (
         const std::string& filename
-    ) : beta(0.5), num_threads(4)
+    ) : beta(0.5), num_threads(4), max_iterations(2000)
     {
         string classname;
         dlib::deserialize(filename) >> classname >> tfe;
@@ -128,7 +128,7 @@ namespace mitie
 // ----------------------------------------------------------------------------------------
 
     unsigned long ner_trainer::
-    size() const 
+    size() const
     {
         return sentences.size();
     }
@@ -155,7 +155,7 @@ namespace mitie
         const std::vector<std::string>& tokens,
         const std::vector<std::pair<unsigned long,unsigned long> >& ranges,
         const std::vector<std::string>& labels
-    ) 
+    )
     {
         // TODO, add missing asserts
         DLIB_CASSERT(ranges.size() == labels.size(),"");
@@ -175,7 +175,7 @@ namespace mitie
         const std::vector<std::vector<std::string> >& tokens,
         const std::vector<std::vector<std::pair<unsigned long,unsigned long> > >& ranges,
         const std::vector<std::vector<std::string> >& labels
-    ) 
+    )
     /*!
         requires
             - it must be legal to call add(tokens[i], ranges[i], labels[i]) for all i.
@@ -192,8 +192,21 @@ namespace mitie
 // ----------------------------------------------------------------------------------------
 
     unsigned long ner_trainer::
+    get_max_iterations (
+    ) const { return max_iterations; }
+
+// ----------------------------------------------------------------------------------------
+
+    unsigned long ner_trainer::
     get_num_threads (
     ) const { return num_threads; }
+
+// ----------------------------------------------------------------------------------------
+
+    void ner_trainer::
+    set_max_iterations (
+        unsigned long num
+    ) { max_iterations = num; }
 
 // ----------------------------------------------------------------------------------------
 
@@ -293,7 +306,7 @@ namespace mitie
         {}
 
         double operator() (
-            const double C 
+            const double C
         ) const
         {
             svm_multiclass_linear_trainer<sparse_linear_kernel<ner_sample_type>,unsigned long> trainer;
@@ -310,7 +323,7 @@ namespace mitie
 
         double compute_fscore (
             const matrix<double>& res,
-            const unsigned long num_labels 
+            const unsigned long num_labels
         ) const
         {
             // Any output from the classifier that has a label value >= num_labels is
@@ -371,9 +384,13 @@ namespace mitie
         trainer.set_c(300);
         trainer.set_num_threads(num_threads);
         trainer.set_epsilon(0.0001);
-        trainer.set_max_iterations(2000);
-        //trainer.be_verbose();
+        trainer.set_max_iterations(max_iterations);
 
+        #ifdef VERBOSE
+        trainer.be_verbose();
+        #endif
+
+        #ifdef SEARCH_C
         if (count_of_least_common_label(labels) > 1)
         {
             train_ner_segment_classifier_objective obj(samples, labels, num_threads, beta, get_all_labels().size(), 2000);
@@ -395,6 +412,7 @@ namespace mitie
             cout << "best C: "<< C << endl;
             trainer.set_c(C);
         }
+        #endif
 
         classifier_type df = trainer.train(samples, labels);
         matrix<double> res = test_multiclass_decision_function(df, samples, labels);
@@ -411,7 +429,7 @@ namespace mitie
         const std::vector<unsigned long>& chunk_labels,
         const std::pair<unsigned long, unsigned long>& range,
         const unsigned long not_entity
-    ) 
+    )
     {
         for (unsigned long i = 0; i < chunks.size(); ++i)
         {
@@ -518,11 +536,10 @@ namespace mitie
         ner_feature_extractor nfe(tfe.get_num_dimensions());
         structural_sequence_segmentation_trainer<ner_feature_extractor> trainer(nfe);
 
-        const double C = 20.0; 
+        const double C = 20.0;
         const double eps = 0.01;
-        const unsigned long max_iterations = 2000;
-        const double loss_per_missed_segment = 3.0; 
-        const unsigned long cache_size = 5; 
+        const double loss_per_missed_segment = 3.0;
+        const unsigned long cache_size = 5;
         cout << "C:           "<< C << endl;
         cout << "epsilon:     "<< eps << endl;
         cout << "num threads: "<< num_threads << endl;
@@ -535,8 +552,12 @@ namespace mitie
         trainer.set_num_threads(num_threads);
         trainer.set_max_cache_size(cache_size);
         trainer.set_loss_per_missed_segment(loss_per_missed_segment);
-        //trainer.be_verbose();
 
+        #ifdef VERBOSE
+        trainer.be_verbose();
+        #endif
+
+        #ifdef SEARCH_C
         if (samples.size() > 1)
         {
             matrix<double,2,1> params;
@@ -563,7 +584,7 @@ namespace mitie
             trainer.set_c(params(0));
             trainer.set_loss_per_missed_segment(params(1)/LOSS_SCALE);
         }
-
+        #endif
 
         segmenter = trainer.train(samples, local_chunks);
 
@@ -720,6 +741,3 @@ namespace mitie
 // ----------------------------------------------------------------------------------------
 
 }
-
-
-

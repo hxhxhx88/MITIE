@@ -74,6 +74,13 @@ namespace mitie
                 - This function adds training instances into the trainer in batch.
         !*/
 
+        unsigned long get_max_iterations (
+        ) const;
+        /*!
+            ensures
+                - returns the number of max iterations.
+        !*/
+
         unsigned long get_num_threads (
         ) const;
         /*!
@@ -81,6 +88,14 @@ namespace mitie
                 - returns the number of threads that will be used to perform training.  You
                   should set this equal to the number of processing cores you have on your
                   computer.
+        !*/
+
+        void set_max_iterations (
+            unsigned long num
+        );
+        /*!
+            ensures
+                - #get_max_iterations() == num
         !*/
 
         void set_num_threads (
@@ -148,6 +163,7 @@ namespace mitie
         total_word_feature_extractor tfe;
         double beta;
         unsigned long num_threads;
+        unsigned long max_iterations;
         std::map<std::string,unsigned long> label_to_id;
         std::vector<std::vector<std::string> > contents;
         std::vector<unsigned long> text_labels;

@@ -112,7 +112,7 @@ namespace mitie
     {
         /*!
             WHAT THIS OBJECT REPRESENTS
-                This is a tool for training mitie::named_entity_extractor objects from a 
+                This is a tool for training mitie::named_entity_extractor objects from a
                 set of annotated training data.
         !*/
     public:
@@ -125,7 +125,7 @@ namespace mitie
                 - #num_threads() == 4
                 - This function attempts to load a mitie::total_word_feature_extractor from the
                   file with the given filename.  This feature extractor is used during the
-                  NER training process.  
+                  NER training process.
         !*/
 
         unsigned long size(
@@ -153,9 +153,9 @@ namespace mitie
         /*!
             requires
                 - ranges.size() == labels.size()
-                - None of the elements of ranges can overlap each other. 
+                - None of the elements of ranges can overlap each other.
                 - for all valid i:
-                    - ranges[i].first < ranges[i].second <= tokens.size() 
+                    - ranges[i].first < ranges[i].second <= tokens.size()
             ensures
                 - This function is a convenient way to add a bunch of
                   ner_training_instances all at once.  In particular, it is equivalent to
@@ -177,13 +177,28 @@ namespace mitie
                   data into a trainer in one call).
         !*/
 
+        unsigned long get_max_iterations (
+        ) const;
+        /*!
+            ensures
+                - returns the number of max iterations.
+        !*/
+
         unsigned long get_num_threads (
         ) const;
         /*!
             ensures
-                - returns the number of threads that will be used to perform training.  You 
-                  should set this equal to the number of processing cores you have on your 
-                  computer.  
+                - returns the number of threads that will be used to perform training.  You
+                  should set this equal to the number of processing cores you have on your
+                  computer.
+        !*/
+
+        void set_max_iterations (
+            unsigned long num
+        );
+        /*!
+            ensures
+                - #get_max_iterations() == num
         !*/
 
         void set_num_threads (
@@ -264,6 +279,7 @@ namespace mitie
         total_word_feature_extractor tfe;
         double beta;
         unsigned long num_threads;
+        unsigned long max_iterations;
         std::map<std::string,unsigned long> label_to_id;
         std::vector<std::vector<std::string> > sentences;
         std::vector<std::vector<std::pair<unsigned long, unsigned long> > > chunks;
@@ -328,7 +344,7 @@ namespace mitie
                   of correctly identifying all labels.
                 - M.overall_recall == The overall recall of the ner object in terms of
                   correctly identifying all labels.
-            - Interprets chunks[i]/text_chunk_labels[i] as the true named entities 
+            - Interprets chunks[i]/text_chunk_labels[i] as the true named entities
               present within sentences[i].  Moreover, text_chunk_labels[i][j] is interpreted
               as the correct label for the entity at position chunks[i][j] where the entity
               positions are given by half open ranges that refer to sentences[i].
@@ -342,4 +358,3 @@ namespace mitie
 }
 
 #endif // MIT_LL_MITIE_NER_TRAINER_H_
-
